@@ -1,0 +1,25 @@
+version: '3'
+services:
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  postgres:
+    image: postgres
+    container_name: postgres-notification-service
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart:
+      always
+volumes:
+  postgres-data:
+    driver: local
+    name: postgres-data
