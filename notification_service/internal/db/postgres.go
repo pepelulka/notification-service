@@ -15,14 +15,14 @@ type PostgresConnection struct {
 	DB *sql.DB
 }
 
-func CreatePostgresConnection(config config.Config) (PostgresConnection, error) {
+func CreatePostgresConnection(config *config.DatabaseConfig) (PostgresConnection, error) {
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
-		config.Database.User,
-		config.Database.Password,
-		config.Database.Host,
-		config.Database.Port,
-		config.Database.DbName,
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		config.User,
+		config.Password,
+		config.Host,
+		config.Port,
+		config.DbName,
 	)
 
 	db, err := sql.Open("postgres", connStr)

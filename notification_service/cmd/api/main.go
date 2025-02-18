@@ -23,9 +23,15 @@ func main() {
 	r.HandleFunc(
 		"/api/persons/all",
 		func(w http.ResponseWriter, r *http.Request) {
-			handlers.GetUsers(cfg, w, r)
+			handlers.GetPersons(&cfg, w, r)
 		},
 	).Methods("GET")
+	r.HandleFunc(
+		"/api/send/email/addresses",
+		func(w http.ResponseWriter, r *http.Request) {
+			handlers.PostSendEmailToAddresses(&cfg, w, r)
+		},
+	).Methods("POST")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":8000", r))

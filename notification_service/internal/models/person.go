@@ -12,3 +12,7 @@ type PersonCreate struct {
 	TelegramId  NullString `json:"telegram_id"`
 	PhoneNumber NullString `json:"phone_number"`
 }
+
+type PersonCreateResult struct {
+	PersonId int `json:"person_id"`
+}

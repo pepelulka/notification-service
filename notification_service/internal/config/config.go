@@ -7,14 +7,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type DatabaseConfig struct {
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	DbName   string `yaml:"db_name"`
+}
+
+type RabbitConfig struct {
+	Host       string `yaml:"host"`
+	Port       string `yaml:"port"`
+	User       string `yaml:"user"`
+	Password   string `yaml:"password"`
+	EmailQueue string `yaml:"email_queue"`
+}
+
 type Config struct {
-	Database struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		DbName   string `yaml:"db_name"`
-	} `yaml:"db"`
+	Database DatabaseConfig `yaml:"db"`
+	Rabbit   RabbitConfig   `yaml:"rabbit"`
 }
 
 func LoadConfig(filename string) (Config, error) {

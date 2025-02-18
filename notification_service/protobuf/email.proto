@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package email;
+
+option go_package = "notification_service/protobuf"; 
+
+message EmailSend {
+    message EmailContent {
+        string Subject = 1;
+        string Body = 2;
+    }
+    
+    EmailContent content = 1;
+    repeated string recipients = 2;
+}
