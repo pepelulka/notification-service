@@ -1,4 +1,4 @@
-package email
+package rabbit_senders
 
 import (
 	"context"
@@ -7,10 +7,9 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"google.golang.org/protobuf/proto"
 )
 
-func RabbitSendEmailRequest(email EmailSend, cfg *config.RabbitConfig) error {
+func RabbitSend(cfg *config.RabbitConfig, content []byte, queue string) error {
 	connString := fmt.Sprintf(
 		"amqp://%s:%s@%s:%s/",
 		cfg.User,
@@ -31,12 +30,12 @@ func RabbitSendEmailRequest(email EmailSend, cfg *config.RabbitConfig) error {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		cfg.EmailQueue, // name
-		false,          // durable
-		false,          // delete when unused
-		false,          // exclusive
-		false,          // no-wait
-		nil,            // arguments
+		queue, // name
+		false, // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
 	)
 	if err != nil {
 		return err
@@ -45,13 +44,6 @@ func RabbitSendEmailRequest(email EmailSend, cfg *config.RabbitConfig) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Prepare message with protobuf
-	msg := email.ToProtobuf()
-	body, err := proto.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
 	err = ch.PublishWithContext(ctx,
 		"",     // exchange
 		q.Name, // routing key
@@ -59,7 +51,7 @@ func RabbitSendEmailRequest(email EmailSend, cfg *config.RabbitConfig) error {
 		false,  // immediate
 		amqp.Publishing{
 			ContentType: "application/octet-stream",
-			Body:        []byte(body),
+			Body:        content,
 		})
 	return err
 }

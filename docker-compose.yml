@@ -19,7 +19,29 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart:
       always
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: etcd
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+      - "4001:4001"
+    command:
+      - etcd
+      - --name=etcd0
+      - --advertise-client-urls=http://etcd0:2379,http://etcd0:4001
+      - --listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001
+      - --initial-advertise-peer-urls=http://etcd0:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-cluster-token=etcd-cluster-1
+      - --initial-cluster=etcd0=http://etcd0:2380
+      - --initial-cluster-state=new
+    volumes:
+      - etcd-data:/etcd-data
 volumes:
   postgres-data:
     driver: local
     name: postgres-data
+  etcd-data:
+    driver: local
+    name: etcd-data

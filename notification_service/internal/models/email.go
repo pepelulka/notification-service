@@ -1,10 +1,10 @@
 package models
 
-import "notification_service/internal/email"
+import rs "notification_service/internal/rabbit_senders"
 
-type EmailSendRequestToSpecificAddressesBody email.EmailSend
+type EmailSendRequestToSpecificAddressesBody rs.EmailSend
 
 type EmailSendRequestToGroupBody struct {
-	Email      email.Email `json:"email"`
-	GroupNames []string    `json:"group_names"`
+	Email      rs.Email `json:"email"`
+	GroupNames []string `json:"group_names"`
 }

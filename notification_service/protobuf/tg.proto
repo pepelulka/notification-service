@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package email;
+
+option go_package = "notification_service/protobuf"; 
+
+message TelegramMessageSend {
+    string content = 1;
+    repeated string recipients = 2;
+}

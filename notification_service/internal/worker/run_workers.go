@@ -33,7 +33,15 @@ func WorkerRoutine(cfg *config.RabbitConfig, workerCfg *config.WorkerConfig) {
 
 	forever := make(chan struct{})
 
+	fmt.Println("Connection to RabbitMQ established. Starting up workers...")
+
+	// Workers start
 	startWorker(emailWorker, ch, cfg.EmailQueue, &workerCfg.EmailWorkerConfig)
+	startWorker(tgWorker, ch, cfg.TgQueue, &workerCfg.TgSenderConfig)
+
+	fmt.Println("Workers are running.")
 
 	<-forever
+
+	fmt.Println("Shutting down...")
 }

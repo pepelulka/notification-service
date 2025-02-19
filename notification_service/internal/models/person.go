@@ -16,3 +16,7 @@ type PersonCreate struct {
 type PersonCreateResult struct {
 	PersonId int `json:"person_id"`
 }
+
+type PersonsDelete struct {
+	PersonIds []int `json:"person_ids"`
+}

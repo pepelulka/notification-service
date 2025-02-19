@@ -21,6 +21,7 @@ type RabbitConfig struct {
 	User       string `yaml:"user"`
 	Password   string `yaml:"password"`
 	EmailQueue string `yaml:"email_queue"`
+	TgQueue    string `yaml:"tg_queue"`
 }
 
 type Config struct {
