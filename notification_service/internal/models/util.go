@@ -9,7 +9,7 @@ type NullString struct {
 	Raw sql.NullString
 }
 
-// Кастомная JSON-сериализация для NullString
+// Custom JSON-serialization for NullString
 func (ns NullString) MarshalJSON() ([]byte, error) {
 	if !ns.Raw.Valid {
 		return []byte("null"), nil
@@ -18,14 +18,12 @@ func (ns NullString) MarshalJSON() ([]byte, error) {
 }
 
 func (ns *NullString) UnmarshalJSON(data []byte) error {
-	// Проверяем, пришел ли `null`
 	if string(data) == "null" {
 		ns.Raw.String = ""
 		ns.Raw.Valid = false
 		return nil
 	}
 
-	// Если не `null`, парсим строку
 	err := json.Unmarshal(data, &ns.Raw.String)
 	if err != nil {
 		return err

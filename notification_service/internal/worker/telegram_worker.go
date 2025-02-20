@@ -1,10 +1,12 @@
 package worker
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"notification_service/internal/config"
 	"notification_service/protobuf"
+	"strconv"
+	"time"
 
 	rs "notification_service/internal/rabbit_senders"
 
@@ -21,11 +23,32 @@ func fromProtobufTgSend(tgSend *protobuf.TelegramMessageSend) *rs.TelegramSend {
 	}
 }
 
-func sendMessage(botApi *tgbotapi.BotAPI, tgSend rs.TelegramSend) {
+// Send messages to specific users using data from etcd
+func sendMessage(botApi *tgbotapi.BotAPI, etcdClient *etcdClient, tgSend rs.TelegramSend) {
+	availableChatIds := make(map[int64]struct{}, 0)
+	for _, recipient := range tgSend.Recipients {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		chatId, has, err := etcdClient.Get(ctx, recipient)
+		cancel()
+		if err != nil {
+		} else if has {
+			chatIdInt, err := strconv.ParseInt(chatId, 10, 64)
+			if err != nil {
+				continue
+			}
+			availableChatIds[chatIdInt] = struct{}{}
+		}
+	}
+
+	for chatId := range availableChatIds {
+		msg := tgbotapi.NewMessage(chatId, tgSend.Content)
+		botApi.Send(msg)
+	}
 
 }
 
-func processMessages(bot *tgbotapi.BotAPI, quit chan struct{}) {
+// Wait for messages to store mapping from username to chat id and store it in etcd.
+func processMessages(bot *tgbotapi.BotAPI, etcdClient *etcdClient, quit chan struct{}) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
@@ -33,7 +56,12 @@ func processMessages(bot *tgbotapi.BotAPI, quit chan struct{}) {
 
 	for update := range updates {
 		if update.Message != nil { // If we got a message
-			log.Printf("[%s] %d", update.Message.From.UserName, update.Message.Chat.ID)
+			userName := update.Message.From.UserName
+			chatId := strconv.FormatInt(update.Message.Chat.ID, 10)
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			etcdClient.Set(ctx, userName, chatId)
+			fmt.Printf("Message got, %s : %s\n", userName, chatId)
+			cancel()
 		}
 	}
 
@@ -50,12 +78,20 @@ func tgWorker(msgs <-chan amqp.Delivery, cfg any) {
 		fmt.Println("Failed to connect to bot api ", err)
 	}
 
+	// Create etcd client
+	etcdClient, err := createEtcdClient(&tgSenderConfig.Etcd)
+	if err != nil {
+		return
+	}
+	defer etcdClient.Close()
+
 	// Running first worker - process messages
 	// to store mapping username -> chatId in etcd
 
 	quit := make(chan struct{})
-	go processMessages(bot, quit)
+	go processMessages(bot, &etcdClient, quit)
 
+	// Running second worker that process requests from rabbitmq
 	for d := range msgs {
 		var tgSendPb protobuf.TelegramMessageSend
 		err := proto.Unmarshal(d.Body, &tgSendPb)
@@ -63,7 +99,7 @@ func tgWorker(msgs <-chan amqp.Delivery, cfg any) {
 			fmt.Println("Failed to process email send request message: ", err)
 		}
 		tgSend := fromProtobufTgSend(&tgSendPb)
-		sendMessage(bot, *tgSend)
+		sendMessage(bot, &etcdClient, *tgSend)
 	}
 
 	<-quit

@@ -13,7 +13,8 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func startWorker(workerFunction func(msgs <-chan amqp.Delivery, cfg any), channel *amqp.Channel, queueName string, cfg any) {
+// Starts worker. Must be called in the new goroutine
+func startWorker(workerFunction func(msgs <-chan amqp.Delivery, cfg any), channel *amqp.Channel, queueName string, cfg any, quit chan struct{}) {
 	q, err := channel.QueueDeclare(
 		queueName, // name
 		false,     // durable
@@ -33,5 +34,7 @@ func startWorker(workerFunction func(msgs <-chan amqp.Delivery, cfg any), channe
 		nil,
 	)
 	failOnError(err, fmt.Sprintf("Failed to start consuming from %s", queueName))
-	go workerFunction(msgs, cfg)
+	workerFunction(msgs, cfg)
+	quit <- struct{}{}
+	fmt.Printf("Worker for queue %s stopped\n", queueName)
 }

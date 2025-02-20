@@ -7,12 +7,12 @@ import (
 )
 
 func main() {
-	workerCfg, err := config.LoadWorkerConfig("worker-config.yml")
+	workerCfg, err := config.LoadConfig[config.WorkerConfig]("worker-config.yml")
 	if err != nil {
 		log.Panicf("Failed to load worker config: %s\n", err)
 	}
 
-	cfg, err := config.LoadConfig("config.yml")
+	cfg, err := config.LoadConfig[config.Config]("config.yml")
 	if err != nil {
 		log.Panicf("Failed to load config: %s\n", err)
 	}

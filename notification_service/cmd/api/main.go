@@ -82,6 +82,8 @@ func setupRouter(r *mux.Router, cfg *config.Config) {
 	// =================================================
 	// Sending API:
 
+	// Emails
+
 	r.HandleFunc(
 		"/api/send/email/addresses",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -96,12 +98,28 @@ func setupRouter(r *mux.Router, cfg *config.Config) {
 		},
 	).Methods("POST")
 
+	// Telegram
+
+	r.HandleFunc(
+		"/api/send/tg/usernames",
+		func(w http.ResponseWriter, r *http.Request) {
+			handlers.PostSendTgToUsernames(cfg, w, r)
+		},
+	).Methods("POST")
+
+	r.HandleFunc(
+		"/api/send/tg/groups",
+		func(w http.ResponseWriter, r *http.Request) {
+			handlers.PostSendTgToGroups(cfg, w, r)
+		},
+	).Methods("POST")
+
 }
 
 func main() {
 	r := mux.NewRouter()
 
-	cfg, err := config.LoadConfig("config.yml")
+	cfg, err := config.LoadConfig[config.Config]("config.yml")
 	if err != nil {
 		log.Fatal(err)
 		return

@@ -29,17 +29,16 @@ type Config struct {
 	Rabbit   RabbitConfig   `yaml:"rabbit"`
 }
 
-func LoadConfig(filename string) (Config, error) {
-	// Open our yaml file
+func LoadConfig[T any](filename string) (T, error) {
 	yamlFile, err := os.Open(filename)
-	// if we os.Open returns an error then handle it
 	if err != nil {
-		return Config{}, err
+		var t T
+		return t, err
 	}
 	defer yamlFile.Close()
 
 	byteValue, _ := io.ReadAll(yamlFile)
-	var config Config
+	var config T
 	yaml.Unmarshal(byteValue, &config)
 	return config, nil
 }
